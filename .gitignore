@@ -1,5 +1,6 @@
 *.json
 output/
+.cache_ggshield
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
