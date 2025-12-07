@@ -12,7 +12,7 @@
 pip install -r requirements.txt
 ```
 
-配置info.json文件，内容如下：
+配置info.json文件，内容如下。联系软研获取详细info.json文件，并放入项目根目录下
 
 ```json
 {
