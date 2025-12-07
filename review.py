@@ -126,7 +126,7 @@ def review_schedules(schedules):
     # 显示完成摘要
     summary_text = f"共确认 {sum(len(schs) for schs in confirmed_schedules.values())} 个课程将发布\n\n"
     for dept, schs in confirmed_schedules.items():
-        summary_text += f"{dept+(1+(5-len(dept))*2)*" "}：{len(schs)} 个课程\n"
+        summary_text += f"{dept+(1+(5-len(dept))*2)*' '}：{len(schs)} 个课程\n"
         # for sch in schs:
         #     summary_text += (f"{sch.title}\n")
         #     summary_text += (f"{time.strftime('%Y-%m-%d %H:%M', time.localtime(sch.start_time))} - {time.strftime('%H:%M', time.localtime(sch.end_time))} | {sch.location}\n")

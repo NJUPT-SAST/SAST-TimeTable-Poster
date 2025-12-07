@@ -54,7 +54,7 @@ def get_auth_code(client_id, redirect_uri):
             return auth_code
         else:
             lark.logger.error("Authorization failed or was denied by the user.")
-            return None
+            exit(-1)
     except:
         lark.logger.error("Authorization timed out.(5min)")
         return None
