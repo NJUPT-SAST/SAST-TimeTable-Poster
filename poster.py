@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 import time
+import os
 
 from utils import Schedule
 
@@ -59,8 +60,8 @@ def draw_textblock(draw: ImageDraw.ImageDraw, color, position: tuple[int, int], 
 def creat_poster(dept: str, schs: list[Schedule]):
     assert len(schs) <= 8, ValueError("Too many schedules to fit in the poster.")
 
-    background_path = f"assets/{dept}.png"
-    output_path = f"output/{dept}.png"
+    background_path = f"./assets/{dept}.png"
+    output_path = f"./output/{dept}.png"
 
     pic = Image.open(background_path).convert("RGB")
     w, h = pic.size
@@ -79,6 +80,8 @@ def creat_poster(dept: str, schs: list[Schedule]):
     assert pos_h <= h, "Poster height exceeded."
 
     pic = pic.crop((0, 0, w, pos_h))
+
+    os.makedirs("./output", exist_ok=True)
     pic.save(output_path)
 
 
