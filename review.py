@@ -1,10 +1,15 @@
+from calendar import c
 import time
+import re
 from prompt_toolkit.shortcuts import radiolist_dialog, input_dialog, yes_no_dialog, message_dialog
 from prompt_toolkit.styles import Style
 
 from prompt_toolkit.key_binding import KeyBindings
 
 from utils import Schedule
+
+
+TITLE = re.compile(r"^\s*[^\s]+\s+[^\s]+\s+[\s\S]+$")
 
 key_bindings = KeyBindings()
 
@@ -54,30 +59,56 @@ def review_schedules(schedules):
             continue
 
         for idx, sch in enumerate(schs, 1):
+            new_dept = dept
             count += 1
             while True:
                 # 显示选项对话框
-                app = radiolist_dialog(
-                    title=f"审查课程 - {dept} ({idx}/{len(schs)}) - 合计 ({count}/{total})",
-                    text=info_text(sch),
-                    values=[
-                        ("confirm", "✓ 确定 - 添加到发布列表"),
-                        ("skip", "✗ 忽略 - 跳过这个课程"),
-                        ("edit_title", "✎ 修改标题"),
-                        ("edit_location", "✎ 修改地点"),
-                        # ("edit_description", "✎ 修改描述"),
-                        # ("edit_start_time", "✎ 修改开始时间"),
-                        # ("edit_end_time", "✎ 修改结束时间"),
-                    ],
-                    style=custom_style,
-                    default="confirm"
-                )
-                app.key_bindings = key_bindings
+                if new_dept != "其他":
+                    if TITLE.match(sch.title):
+                        app = radiolist_dialog(
+                            title=f"审查课程 - {dept} ({idx}/{len(schs)}) - 合计 ({count}/{total})",
+                            text=info_text(sch),
+                            values=[
+                                ("confirm", "✓ 确定 - 添加到发布列表"),
+                                ("skip", "✗ 忽略 - 跳过这个课程"),
+                                ("edit_title", "✎ 修改标题"),
+                                ("edit_location", "✎ 修改地点"),
+                                ("edit_dept", "✎ 修改部门"),
+                            ],
+                            style=custom_style,
+                            default="confirm"
+                        )
+                        app.key_bindings = key_bindings
 
-                result = app.run()
+                        result = app.run()
+                    else:
+                        new_title = input_dialog(
+                            title="标题格式错误",
+                            text=f"课程标题「{sch.title}」格式不正确，请修改标题以符合格式要求:\n\n[部门] [组别] [课程名称]\n\n(Esc 取消)",
+                            default=sch.title,
+                            style=custom_style
+                        ).run()
+                        if new_title:
+                            sch.title = new_title
+                            continue
+                else:
+                    new_dept = radiolist_dialog(
+                        title=f"修改部门 - {dept} ({idx}/{len(schs)}) - 合计 ({count}/{total})",
+                        text=info_text(sch),
+                        values=[
+                            ("软件研发部", "软件研发部"),
+                            ("多媒体部", "多媒体部"),
+                            ("电子部", "电子部"),
+                            ("skip", "✗ 忽略 - 跳过这个课程"),
+                        ],
+                        style=custom_style
+                    ).run()
+                    if new_dept == "skip":
+                        break
+                    continue
 
                 if result == "confirm":
-                    confirmed_schedules[dept].append(sch)
+                    confirmed_schedules[new_dept].append(sch)
                     break
 
                 elif result == "skip":
@@ -98,8 +129,6 @@ def review_schedules(schedules):
                     ).run()
                     if new_title:
                         sch.title = new_title
-                        confirmed_schedules[dept].append(sch)
-                        break
 
                 elif result == "edit_location":
                     new_location = input_dialog(
@@ -110,8 +139,18 @@ def review_schedules(schedules):
                     ).run()
                     if new_location:
                         sch.location = new_location
-                        confirmed_schedules[dept].append(sch)
-                        break
+
+                elif result == "edit_dept":
+                    new_dept = radiolist_dialog(
+                        title=f"修改部门",
+                        text="请选择新的部门 (Esc 取消):",
+                        values=[
+                            ("软件研发部", "软件研发部"),
+                            ("多媒体部", "多媒体部"),
+                            ("电子部", "电子部"),
+                        ],
+                        style=custom_style
+                    ).run()
 
                 elif result is None:
                     # 用户按 Esc 取消
@@ -127,10 +166,6 @@ def review_schedules(schedules):
     summary_text = f"共确认 {sum(len(schs) for schs in confirmed_schedules.values())} 个课程将发布\n\n"
     for dept, schs in confirmed_schedules.items():
         summary_text += f"{dept+(1+(5-len(dept))*2)*' '}：{len(schs)} 个课程\n"
-        # for sch in schs:
-        #     summary_text += (f"{sch.title}\n")
-        #     summary_text += (f"{time.strftime('%Y-%m-%d %H:%M', time.localtime(sch.start_time))} - {time.strftime('%H:%M', time.localtime(sch.end_time))} | {sch.location}\n")
-        #     summary_text += ("\n")
 
     message_dialog(
         title="✓ 审查完成",
@@ -167,8 +202,22 @@ if __name__ == "__main__":
                 "教三-101",
                 "认识剪辑"
             ),
+        ],
+        "其他": [
+            Schedule(
+                "校团委 新媒体运营培训",
+                int(time.time() + 86400 * 4),
+                int(time.time() + 86400 * 4 + 3600),
+                "大学生活动中心-汇客厅(112 - 113)",
+                "新媒体基础知识"
+            ),
         ]
     }
 
     confirmed_schedules = review_schedules(demo_schedules)
-
+    for dept, schs in confirmed_schedules.items():
+        print(f"{'=' * 10} {dept} {'=' * 10}")
+        for sch in schs:
+            print(sch.title)
+            print(f"{time.strftime('%Y-%m-%d %H:%M', time.localtime(sch.start_time))} - {time.strftime('%H:%M', time.localtime(sch.end_time))} | {sch.location}")
+            print("\n")

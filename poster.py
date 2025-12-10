@@ -60,6 +60,8 @@ def draw_textblock(draw: ImageDraw.ImageDraw, color, position: tuple[int, int], 
 def creat_poster(dept: str, schs: list[Schedule]):
     assert len(schs) <= 8, ValueError("Too many schedules to fit in the poster.")
 
+    schs.sort(key=lambda x: x.start_time)
+
     background_path = f"./assets/{dept}.png"
     output_path = f"./output/{dept}.png"
 
